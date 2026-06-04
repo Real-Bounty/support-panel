@@ -1,7 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { TicketListPage } from "@/components/support/TicketListPage";
+import { createFileRoute, Outlet } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_app/tickets")({
-  head: () => ({ meta: [{ title: "All Tickets · NavikX Support" }] }),
-  component: () => <TicketListPage title="All Tickets" description="Every ticket across the platform." />,
+  component: () => <Outlet />,
 });

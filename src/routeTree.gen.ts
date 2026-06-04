@@ -15,6 +15,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppTicketsRouteImport } from './routes/_app.tickets'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
 import { Route as AppAnalyticsRouteImport } from './routes/_app.analytics'
+import { Route as AppTicketsIndexRouteImport } from './routes/_app.tickets.index'
 import { Route as AppTicketsResolvedRouteImport } from './routes/_app.tickets.resolved'
 import { Route as AppTicketsMineRouteImport } from './routes/_app.tickets.mine'
 import { Route as AppTicketsEscalatedRouteImport } from './routes/_app.tickets.escalated'
@@ -49,6 +50,11 @@ const AppAnalyticsRoute = AppAnalyticsRouteImport.update({
   path: '/analytics',
   getParentRoute: () => AppRoute,
 } as any)
+const AppTicketsIndexRoute = AppTicketsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppTicketsRoute,
+} as any)
 const AppTicketsResolvedRoute = AppTicketsResolvedRouteImport.update({
   id: '/resolved',
   path: '/resolved',
@@ -80,17 +86,18 @@ export interface FileRoutesByFullPath {
   '/tickets/escalated': typeof AppTicketsEscalatedRoute
   '/tickets/mine': typeof AppTicketsMineRoute
   '/tickets/resolved': typeof AppTicketsResolvedRoute
+  '/tickets/': typeof AppTicketsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/analytics': typeof AppAnalyticsRoute
   '/dashboard': typeof AppDashboardRoute
-  '/tickets': typeof AppTicketsRouteWithChildren
   '/tickets/$ticketId': typeof AppTicketsTicketIdRoute
   '/tickets/escalated': typeof AppTicketsEscalatedRoute
   '/tickets/mine': typeof AppTicketsMineRoute
   '/tickets/resolved': typeof AppTicketsResolvedRoute
+  '/tickets': typeof AppTicketsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -104,6 +111,7 @@ export interface FileRoutesById {
   '/_app/tickets/escalated': typeof AppTicketsEscalatedRoute
   '/_app/tickets/mine': typeof AppTicketsMineRoute
   '/_app/tickets/resolved': typeof AppTicketsResolvedRoute
+  '/_app/tickets/': typeof AppTicketsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -117,17 +125,18 @@ export interface FileRouteTypes {
     | '/tickets/escalated'
     | '/tickets/mine'
     | '/tickets/resolved'
+    | '/tickets/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/login'
     | '/analytics'
     | '/dashboard'
-    | '/tickets'
     | '/tickets/$ticketId'
     | '/tickets/escalated'
     | '/tickets/mine'
     | '/tickets/resolved'
+    | '/tickets'
   id:
     | '__root__'
     | '/'
@@ -140,6 +149,7 @@ export interface FileRouteTypes {
     | '/_app/tickets/escalated'
     | '/_app/tickets/mine'
     | '/_app/tickets/resolved'
+    | '/_app/tickets/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -192,6 +202,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAnalyticsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/tickets/': {
+      id: '/_app/tickets/'
+      path: '/'
+      fullPath: '/tickets/'
+      preLoaderRoute: typeof AppTicketsIndexRouteImport
+      parentRoute: typeof AppTicketsRoute
+    }
     '/_app/tickets/resolved': {
       id: '/_app/tickets/resolved'
       path: '/resolved'
@@ -228,6 +245,7 @@ interface AppTicketsRouteChildren {
   AppTicketsEscalatedRoute: typeof AppTicketsEscalatedRoute
   AppTicketsMineRoute: typeof AppTicketsMineRoute
   AppTicketsResolvedRoute: typeof AppTicketsResolvedRoute
+  AppTicketsIndexRoute: typeof AppTicketsIndexRoute
 }
 
 const AppTicketsRouteChildren: AppTicketsRouteChildren = {
@@ -235,6 +253,7 @@ const AppTicketsRouteChildren: AppTicketsRouteChildren = {
   AppTicketsEscalatedRoute: AppTicketsEscalatedRoute,
   AppTicketsMineRoute: AppTicketsMineRoute,
   AppTicketsResolvedRoute: AppTicketsResolvedRoute,
+  AppTicketsIndexRoute: AppTicketsIndexRoute,
 }
 
 const AppTicketsRouteWithChildren = AppTicketsRoute._addFileChildren(
@@ -263,3 +282,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
