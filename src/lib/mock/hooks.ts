@@ -4,13 +4,19 @@ import type { Ticket } from "@/lib/mock/types";
 
 export function useTickets(): Ticket[] {
   const [, force] = useState(0);
-  useEffect(() => ticketsStore.subscribe(() => force((x) => x + 1)), []);
+  useEffect(() => {
+    const unsub = ticketsStore.subscribe(() => force((x) => x + 1));
+    return () => { unsub(); };
+  }, []);
   return ticketsStore.getAll();
 }
 
 export function useTicket(id: string): Ticket | undefined {
   const [, force] = useState(0);
-  useEffect(() => ticketsStore.subscribe(() => force((x) => x + 1)), []);
+  useEffect(() => {
+    const unsub = ticketsStore.subscribe(() => force((x) => x + 1));
+    return () => { unsub(); };
+  }, []);
   return ticketsStore.get(id);
 }
 
