@@ -9,38 +9,171 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AppTicketsRouteImport } from './routes/_app.tickets'
+import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
+import { Route as AppAnalyticsRouteImport } from './routes/_app.analytics'
+import { Route as AppTicketsIndexRouteImport } from './routes/_app.tickets.index'
+import { Route as AppTicketsResolvedRouteImport } from './routes/_app.tickets.resolved'
+import { Route as AppTicketsMineRouteImport } from './routes/_app.tickets.mine'
+import { Route as AppTicketsEscalatedRouteImport } from './routes/_app.tickets.escalated'
+import { Route as AppTicketsTicketIdRouteImport } from './routes/_app.tickets.$ticketId'
 
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppRoute = AppRouteImport.update({
+  id: '/_app',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppTicketsRoute = AppTicketsRouteImport.update({
+  id: '/tickets',
+  path: '/tickets',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppDashboardRoute = AppDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAnalyticsRoute = AppAnalyticsRouteImport.update({
+  id: '/analytics',
+  path: '/analytics',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppTicketsIndexRoute = AppTicketsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppTicketsRoute,
+} as any)
+const AppTicketsResolvedRoute = AppTicketsResolvedRouteImport.update({
+  id: '/resolved',
+  path: '/resolved',
+  getParentRoute: () => AppTicketsRoute,
+} as any)
+const AppTicketsMineRoute = AppTicketsMineRouteImport.update({
+  id: '/mine',
+  path: '/mine',
+  getParentRoute: () => AppTicketsRoute,
+} as any)
+const AppTicketsEscalatedRoute = AppTicketsEscalatedRouteImport.update({
+  id: '/escalated',
+  path: '/escalated',
+  getParentRoute: () => AppTicketsRoute,
+} as any)
+const AppTicketsTicketIdRoute = AppTicketsTicketIdRouteImport.update({
+  id: '/$ticketId',
+  path: '/$ticketId',
+  getParentRoute: () => AppTicketsRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/login': typeof LoginRoute
+  '/analytics': typeof AppAnalyticsRoute
+  '/dashboard': typeof AppDashboardRoute
+  '/tickets': typeof AppTicketsRouteWithChildren
+  '/tickets/$ticketId': typeof AppTicketsTicketIdRoute
+  '/tickets/escalated': typeof AppTicketsEscalatedRoute
+  '/tickets/mine': typeof AppTicketsMineRoute
+  '/tickets/resolved': typeof AppTicketsResolvedRoute
+  '/tickets/': typeof AppTicketsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/login': typeof LoginRoute
+  '/analytics': typeof AppAnalyticsRoute
+  '/dashboard': typeof AppDashboardRoute
+  '/tickets/$ticketId': typeof AppTicketsTicketIdRoute
+  '/tickets/escalated': typeof AppTicketsEscalatedRoute
+  '/tickets/mine': typeof AppTicketsMineRoute
+  '/tickets/resolved': typeof AppTicketsResolvedRoute
+  '/tickets': typeof AppTicketsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_app': typeof AppRouteWithChildren
+  '/login': typeof LoginRoute
+  '/_app/analytics': typeof AppAnalyticsRoute
+  '/_app/dashboard': typeof AppDashboardRoute
+  '/_app/tickets': typeof AppTicketsRouteWithChildren
+  '/_app/tickets/$ticketId': typeof AppTicketsTicketIdRoute
+  '/_app/tickets/escalated': typeof AppTicketsEscalatedRoute
+  '/_app/tickets/mine': typeof AppTicketsMineRoute
+  '/_app/tickets/resolved': typeof AppTicketsResolvedRoute
+  '/_app/tickets/': typeof AppTicketsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/login'
+    | '/analytics'
+    | '/dashboard'
+    | '/tickets'
+    | '/tickets/$ticketId'
+    | '/tickets/escalated'
+    | '/tickets/mine'
+    | '/tickets/resolved'
+    | '/tickets/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/login'
+    | '/analytics'
+    | '/dashboard'
+    | '/tickets/$ticketId'
+    | '/tickets/escalated'
+    | '/tickets/mine'
+    | '/tickets/resolved'
+    | '/tickets'
+  id:
+    | '__root__'
+    | '/'
+    | '/_app'
+    | '/login'
+    | '/_app/analytics'
+    | '/_app/dashboard'
+    | '/_app/tickets'
+    | '/_app/tickets/$ticketId'
+    | '/_app/tickets/escalated'
+    | '/_app/tickets/mine'
+    | '/_app/tickets/resolved'
+    | '/_app/tickets/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AppRoute: typeof AppRouteWithChildren
+  LoginRoute: typeof LoginRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_app': {
+      id: '/_app'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,22 +181,104 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_app/tickets': {
+      id: '/_app/tickets'
+      path: '/tickets'
+      fullPath: '/tickets'
+      preLoaderRoute: typeof AppTicketsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/dashboard': {
+      id: '/_app/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AppDashboardRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/analytics': {
+      id: '/_app/analytics'
+      path: '/analytics'
+      fullPath: '/analytics'
+      preLoaderRoute: typeof AppAnalyticsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/tickets/': {
+      id: '/_app/tickets/'
+      path: '/'
+      fullPath: '/tickets/'
+      preLoaderRoute: typeof AppTicketsIndexRouteImport
+      parentRoute: typeof AppTicketsRoute
+    }
+    '/_app/tickets/resolved': {
+      id: '/_app/tickets/resolved'
+      path: '/resolved'
+      fullPath: '/tickets/resolved'
+      preLoaderRoute: typeof AppTicketsResolvedRouteImport
+      parentRoute: typeof AppTicketsRoute
+    }
+    '/_app/tickets/mine': {
+      id: '/_app/tickets/mine'
+      path: '/mine'
+      fullPath: '/tickets/mine'
+      preLoaderRoute: typeof AppTicketsMineRouteImport
+      parentRoute: typeof AppTicketsRoute
+    }
+    '/_app/tickets/escalated': {
+      id: '/_app/tickets/escalated'
+      path: '/escalated'
+      fullPath: '/tickets/escalated'
+      preLoaderRoute: typeof AppTicketsEscalatedRouteImport
+      parentRoute: typeof AppTicketsRoute
+    }
+    '/_app/tickets/$ticketId': {
+      id: '/_app/tickets/$ticketId'
+      path: '/$ticketId'
+      fullPath: '/tickets/$ticketId'
+      preLoaderRoute: typeof AppTicketsTicketIdRouteImport
+      parentRoute: typeof AppTicketsRoute
+    }
   }
 }
 
+interface AppTicketsRouteChildren {
+  AppTicketsTicketIdRoute: typeof AppTicketsTicketIdRoute
+  AppTicketsEscalatedRoute: typeof AppTicketsEscalatedRoute
+  AppTicketsMineRoute: typeof AppTicketsMineRoute
+  AppTicketsResolvedRoute: typeof AppTicketsResolvedRoute
+  AppTicketsIndexRoute: typeof AppTicketsIndexRoute
+}
+
+const AppTicketsRouteChildren: AppTicketsRouteChildren = {
+  AppTicketsTicketIdRoute: AppTicketsTicketIdRoute,
+  AppTicketsEscalatedRoute: AppTicketsEscalatedRoute,
+  AppTicketsMineRoute: AppTicketsMineRoute,
+  AppTicketsResolvedRoute: AppTicketsResolvedRoute,
+  AppTicketsIndexRoute: AppTicketsIndexRoute,
+}
+
+const AppTicketsRouteWithChildren = AppTicketsRoute._addFileChildren(
+  AppTicketsRouteChildren,
+)
+
+interface AppRouteChildren {
+  AppAnalyticsRoute: typeof AppAnalyticsRoute
+  AppDashboardRoute: typeof AppDashboardRoute
+  AppTicketsRoute: typeof AppTicketsRouteWithChildren
+}
+
+const AppRouteChildren: AppRouteChildren = {
+  AppAnalyticsRoute: AppAnalyticsRoute,
+  AppDashboardRoute: AppDashboardRoute,
+  AppTicketsRoute: AppTicketsRouteWithChildren,
+}
+
+const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AppRoute: AppRouteWithChildren,
+  LoginRoute: LoginRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
