@@ -7,11 +7,13 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import type { ReactNode } from "react";
 
 import appCss from "../styles.css?url";
-import { reportLovableError } from "../lib/lovable-error-reporting";
+import { PanelProviders } from "@/shared";
 import { Toaster } from "@/components/ui/sonner";
+import { AuthProvider } from "@/lib/auth";
+import { AuthSessionWatcher } from "@/components/auth-session";
 
 function NotFoundComponent() {
   return (
@@ -38,9 +40,6 @@ function NotFoundComponent() {
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   console.error(error);
   const router = useRouter();
-  useEffect(() => {
-    reportLovableError(error, { boundary: "tanstack_root_error_component" });
-  }, [error]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
@@ -74,8 +73,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "NavikX Support Panel" },
-      { name: "description", content: "Internal support console for NavikX" },
+      { title: "Real Bounty Support Panel" },
+      { name: "description", content: "Internal support console for Real Bounty" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
@@ -111,8 +110,13 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   return (
     <QueryClientProvider client={queryClient}>
-      <Outlet />
-      <Toaster />
+      <PanelProviders>
+        <AuthProvider>
+          <AuthSessionWatcher />
+          <Outlet />
+          <Toaster richColors position="top-right" />
+        </AuthProvider>
+      </PanelProviders>
     </QueryClientProvider>
   );
 }

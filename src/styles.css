@@ -25,6 +25,12 @@
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -62,9 +68,9 @@
 }
 
 :root {
-  --radius: 0.5rem;
+  --radius: 0.625rem;
 
-  --background: oklch(0.99 0.003 60);
+  --background: oklch(0.97 0.004 60);
   --foreground: oklch(0.18 0.02 20);
 
   --card: oklch(1 0 0);
@@ -84,24 +90,31 @@
   --accent-foreground: oklch(0.42 0.16 28);
   --destructive: oklch(0.55 0.22 27);
   --destructive-foreground: oklch(0.99 0 0);
+  --success: oklch(0.6 0.15 150);
+  --success-foreground: oklch(0.99 0 0);
+  --warning: oklch(0.75 0.15 75);
+  --warning-foreground: oklch(0.27 0.05 70);
+  --info: oklch(0.6 0.13 240);
+  --info-foreground: oklch(0.99 0 0);
 
   --border: oklch(0.92 0.005 60);
   --input: oklch(0.92 0.005 60);
   --ring: oklch(0.42 0.16 28);
 
-  --chart-1: oklch(0.42 0.16 28);
-  --chart-2: oklch(0.6 0.14 200);
-  --chart-3: oklch(0.65 0.16 60);
-  --chart-4: oklch(0.55 0.18 145);
-  --chart-5: oklch(0.55 0.2 300);
+  --chart-1: oklch(0.62 0.21 25);
+  --chart-2: oklch(0.6 0.16 250);
+  --chart-3: oklch(0.76 0.15 70);
+  --chart-4: oklch(0.65 0.15 155);
+  --chart-5: oklch(0.62 0.2 300);
 
-  --sidebar: oklch(0.99 0.003 60);
-  --sidebar-foreground: oklch(0.25 0.02 20);
+  /* Sidebar — neutral dark slate (support brand accent on active items) */
+  --sidebar: oklch(0.22 0.012 265);
+  --sidebar-foreground: oklch(0.9 0.004 265);
   --sidebar-primary: oklch(0.42 0.16 28);
   --sidebar-primary-foreground: oklch(0.99 0 0);
-  --sidebar-accent: oklch(0.95 0.01 28);
-  --sidebar-accent-foreground: oklch(0.42 0.16 28);
-  --sidebar-border: oklch(0.92 0.005 60);
+  --sidebar-accent: oklch(0.28 0.014 265);
+  --sidebar-accent-foreground: oklch(0.97 0 0);
+  --sidebar-border: oklch(0.3 0.01 265);
   --sidebar-ring: oklch(0.42 0.16 28);
 
   /* Status */
@@ -133,5 +146,33 @@
     color: var(--color-foreground);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+  h1, h2, h3, h4 {
+    letter-spacing: -0.011em;
+  }
+  table, [data-slot="table"] {
+    font-variant-numeric: tabular-nums;
   }
 }
+
+/* List chip palette — light background, dark text (matches CRM panel) */
+.chip-status-open { background: oklch(0.92 0.06 230); color: oklch(0.4 0.14 230); }
+.chip-status-progress { background: oklch(0.92 0.06 260); color: oklch(0.42 0.15 260); }
+.chip-status-waiting { background: oklch(0.93 0.08 80); color: oklch(0.45 0.12 70); }
+.chip-status-escalated { background: oklch(0.93 0.08 25); color: oklch(0.5 0.18 25); }
+.chip-status-resolved { background: oklch(0.92 0.11 160); color: oklch(0.42 0.14 160); }
+.chip-status-closed { background: oklch(0.93 0.005 250); color: oklch(0.35 0.02 250); }
+
+.chip-priority-critical { background: oklch(0.93 0.08 25); color: oklch(0.5 0.18 25); }
+.chip-priority-high { background: oklch(0.92 0.1 50); color: oklch(0.5 0.17 40); }
+.chip-priority-medium { background: oklch(0.93 0.08 80); color: oklch(0.45 0.12 70); }
+.chip-priority-low { background: oklch(0.93 0.005 250); color: oklch(0.35 0.02 250); }
+
+.chip-category-payment { background: oklch(0.92 0.06 250); color: oklch(0.4 0.14 250); }
+.chip-category-commission { background: oklch(0.94 0.12 95); color: oklch(0.45 0.14 80); }
+.chip-category-kyc { background: oklch(0.92 0.11 160); color: oklch(0.42 0.14 160); }
+.chip-category-referral { background: oklch(0.92 0.07 300); color: oklch(0.45 0.18 295); }
+.chip-category-technical { background: oklch(0.93 0.08 25); color: oklch(0.5 0.18 25); }
+.chip-category-general { background: oklch(0.93 0.005 250); color: oklch(0.35 0.02 250); }

@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { TicketListPage } from "@/components/support/TicketListPage";
 
 export const Route = createFileRoute("/_app/tickets/resolved")({
-  head: () => ({ meta: [{ title: "Resolved · NavikX Support" }] }),
+  head: () => ({ meta: [{ title: "Resolved · Real Bounty Support" }] }),
   component: () => (
     <TicketListPage
       title="Resolved Tickets"

@@ -44,16 +44,19 @@ import {
   Send,
   ChevronLeft,
 } from "lucide-react";
-import { toast } from "sonner";
+import { notify, MESSAGES, useConfirm } from "@/shared";
+import { runMockAction } from "@/lib/mock-api";
+import { PermissionButton } from "@/components/permission-gate";
 
 const STATUSES: TicketStatus[] = ["Open", "In Progress", "Waiting User", "Escalated", "Resolved", "Closed"];
 
 export const Route = createFileRoute("/_app/tickets/$ticketId")({
-  head: ({ params }) => ({ meta: [{ title: `${params.ticketId} · NavikX Support` }] }),
+  head: ({ params }) => ({ meta: [{ title: `${params.ticketId} · Real Bounty Support` }] }),
   component: TicketDetail,
 });
 
 function TicketDetail() {
+  const { confirm } = useConfirm();
   const { ticketId } = Route.useParams();
   const ticket = useTicket(ticketId);
   if (!ticket) throw notFound();
@@ -80,12 +83,12 @@ function TicketDetail() {
       internal: isInternal,
     });
     setMessage("");
-    toast.success(isInternal ? "Internal note added" : "Reply sent to user");
+    runMockAction(null, isInternal ? MESSAGES.SUCCESS.SAVED : MESSAGES.SUCCESS.SENT);
   };
 
   const confirmEscalate = () => {
     if (!escReason.trim()) {
-      toast.error("Please provide an escalation reason");
+      notify.error(MESSAGES.ERROR.REASON_REQUIRED);
       return;
     }
     ticketsStore.addEscalation(ticket.id, {
@@ -95,7 +98,7 @@ function TicketDetail() {
     });
     setEscOpen(false);
     setEscReason("");
-    toast.success(`Ticket escalated to ${escLevel}`);
+    runMockAction(null, MESSAGES.SUCCESS.ESCALATED);
   };
 
   return (
@@ -126,7 +129,7 @@ function TicketDetail() {
                   value={ticket.status}
                   onValueChange={(v) => {
                     ticketsStore.update(ticket.id, { status: v as TicketStatus });
-                    toast.success(`Status set to ${v}`);
+                    runMockAction(null, MESSAGES.INFO.STATUS_UPDATED);
                   }}
                 >
                   <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
@@ -138,7 +141,7 @@ function TicketDetail() {
                   value={ticket.assignedAgentId}
                   onValueChange={(v) => {
                     ticketsStore.update(ticket.id, { assignedAgentId: v });
-                    toast.success(`Assigned to ${agentById(v)?.name}`);
+                    runMockAction(null, MESSAGES.SUCCESS.ASSIGNED);
                   }}
                 >
                   <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
@@ -245,7 +248,7 @@ function TicketDetail() {
           )}
         </div>
 
-        {/* RIGHT COLUMN — CHAT */}
+        {/* RIGHT COLUMN - CHAT */}
         <div className="lg:col-span-5">
           <Card className="flex h-[calc(100vh-9rem)] flex-col p-0">
             <div className="flex items-center justify-between border-b p-3">
@@ -311,24 +314,57 @@ function TicketDetail() {
                 <Button variant="ghost" size="sm" type="button">
                   <Paperclip className="mr-1 h-4 w-4" /> Attach
                 </Button>
-                <Button onClick={send} size="sm" disabled={!message.trim()}>
+                <PermissionButton module="tickets" action="edit" onClick={send} size="sm" disabled={!message.trim()}>
                   <Send className="mr-1 h-4 w-4" /> Send
-                </Button>
+                </PermissionButton>
               </div>
             </div>
           </Card>
 
           {/* Action row */}
           <div className="mt-3 flex flex-wrap gap-2">
-            <Button variant="outline" size="sm" onClick={() => setEscOpen(true)} className="text-status-escalated border-status-escalated/40 hover:bg-status-escalated/10 hover:text-status-escalated">
+            <PermissionButton module="tickets" action="edit" variant="outline" size="sm" onClick={() => setEscOpen(true)} className="text-status-escalated border-status-escalated/40 hover:bg-status-escalated/10 hover:text-status-escalated">
               <ArrowUpCircle className="mr-1 h-4 w-4" /> Escalate
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => { ticketsStore.update(ticket.id, { status: "Resolved" }); toast.success("Marked resolved"); }}>
+            </PermissionButton>
+            <PermissionButton
+              module="tickets"
+              action="edit"
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                confirm({
+                  title: "Mark resolved?",
+                  description: "The user will be notified that this ticket is resolved.",
+                  confirmLabel: "Resolve",
+                  onConfirm: () => {
+                    ticketsStore.update(ticket.id, { status: "Resolved" });
+                    runMockAction(null, MESSAGES.SUCCESS.RESOLVED);
+                  },
+                })
+              }
+            >
               <CheckCircle2 className="mr-1 h-4 w-4" /> Mark Resolved
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => { ticketsStore.update(ticket.id, { status: "Closed" }); toast.success("Ticket closed"); }}>
+            </PermissionButton>
+            <PermissionButton
+              module="tickets"
+              action="delete"
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                confirm({
+                  title: "Close ticket?",
+                  description: "This ticket will be archived and cannot receive new replies.",
+                  confirmLabel: "Close",
+                  variant: "destructive",
+                  onConfirm: () => {
+                    ticketsStore.update(ticket.id, { status: "Closed" });
+                    runMockAction(null, MESSAGES.SUCCESS.CLOSED);
+                  },
+                })
+              }
+            >
               <XCircle className="mr-1 h-4 w-4" /> Mark Closed
-            </Button>
+            </PermissionButton>
           </div>
         </div>
       </div>
@@ -347,8 +383,8 @@ function TicketDetail() {
               <Select value={escLevel} onValueChange={(v) => setEscLevel(v as typeof escLevel)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Level 2 Senior Support">Level 2 — Senior Support</SelectItem>
-                  <SelectItem value="Level 3 Admin">Level 3 — Admin</SelectItem>
+                  <SelectItem value="Level 2 Senior Support">Level 2 - Senior Support</SelectItem>
+                  <SelectItem value="Level 3 Admin">Level 3 - Admin</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -364,7 +400,19 @@ function TicketDetail() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setEscOpen(false)}>Cancel</Button>
-            <Button onClick={confirmEscalate}>Confirm escalation</Button>
+            <Button
+              onClick={() =>
+                confirm({
+                  title: "Confirm escalation?",
+                  description: `Escalate ${ticket.id} to level ${escLevel}?`,
+                  confirmLabel: "Escalate",
+                  variant: "destructive",
+                  onConfirm: confirmEscalate,
+                })
+              }
+            >
+              Confirm escalation
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

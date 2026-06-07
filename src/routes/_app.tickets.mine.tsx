@@ -3,7 +3,7 @@ import { TicketListPage } from "@/components/support/TicketListPage";
 import { currentAgentId } from "@/lib/mock/agents";
 
 export const Route = createFileRoute("/_app/tickets/mine")({
-  head: () => ({ meta: [{ title: "My Tickets · NavikX Support" }] }),
+  head: () => ({ meta: [{ title: "My Tickets · Real Bounty Support" }] }),
   component: () => (
     <TicketListPage
       title="My Tickets"

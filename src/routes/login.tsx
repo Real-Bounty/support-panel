@@ -1,25 +1,40 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { ShieldCheck } from "lucide-react";
+import { useAuth } from "@/lib/auth";
+import { authenticateSupport, DEMO_SUPPORT_HINT } from "@/lib/support-credentials";
+import { notify, MESSAGES } from "@/shared";
 
 export const Route = createFileRoute("/login")({
-  head: () => ({ meta: [{ title: "Sign in · NavikX Support" }] }),
+  head: () => ({ meta: [{ title: "Sign in · Real Bounty Support" }] }),
   component: LoginPage,
 });
 
 function LoginPage() {
+  const { login } = useAuth();
   const navigate = useNavigate();
-  const [email, setEmail] = useState("aarav@navikx.com");
-  const [password, setPassword] = useState("••••••••");
+  const [identifier, setIdentifier] = useState("aarav");
+  const [password, setPassword] = useState("support123");
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) return;
-    localStorage.setItem("navikx-auth", "1");
+    if (!identifier || !password) return notify.error(MESSAGES.ERROR.REQUIRED_FIELD);
+
+    const account = authenticateSupport(identifier, password);
+    if (!account) return notify.error(MESSAGES.ERROR.INVALID_CREDENTIALS);
+
+    login({
+      id: account.id,
+      name: account.name,
+      email: account.email,
+      username: account.username,
+      role: account.role,
+    });
+    notify.success(`${MESSAGES.SUCCESS.LOGIN} ${account.name}`);
     navigate({ to: "/dashboard" });
   };
 
@@ -31,7 +46,7 @@ function LoginPage() {
             N
           </div>
           <div className="text-center">
-            <h1 className="text-2xl font-bold tracking-tight">NavikX Support</h1>
+            <h1 className="text-2xl font-bold tracking-tight">Real Bounty Support</h1>
             <p className="mt-1 text-sm text-muted-foreground">
               Internal support console — sign in to continue
             </p>
@@ -45,18 +60,22 @@ function LoginPage() {
           </div>
           <form onSubmit={submit} className="space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="email">Work email</Label>
+              <Label htmlFor="identifier">Email or username</Label>
               <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="agent@navikx.com"
+                id="identifier"
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
+                placeholder="aarav@realbounty.com or aarav"
                 required
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="password">Password</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password">Password</Label>
+                <Link to="/forgot-password" className="text-xs text-primary hover:underline">
+                  Forgot password?
+                </Link>
+              </div>
               <Input
                 id="password"
                 type="password"
@@ -71,8 +90,9 @@ function LoginPage() {
           </form>
         </Card>
 
-        <p className="mt-6 text-center text-xs text-muted-foreground">
-          NavikX Internal Support Console · v1.0
+        <p className="mt-6 text-center text-xs text-muted-foreground">{DEMO_SUPPORT_HINT}</p>
+        <p className="mt-2 text-center text-xs text-muted-foreground">
+          Real Bounty Internal Support Console · v1.0
         </p>
       </div>
     </div>

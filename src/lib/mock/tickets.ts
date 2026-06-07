@@ -21,7 +21,7 @@ const sampleConversation = (userName: string): Message[] => [
   {
     id: "m1",
     author: "user",
-    text: `Hi, I made a referral payment last week but I haven't received the commission credit yet. Please check on this. — ${userName}`,
+    text: `Hi, I made a referral payment last week but I haven't received the commission credit yet. Please check on this. - ${userName}`,
     timestamp: iso(-26 * HOUR),
   },
   {
@@ -36,7 +36,7 @@ const sampleConversation = (userName: string): Message[] => [
     author: "agent",
     agentId: "a1",
     internal: true,
-    text: "Checked ledger — payment captured but commission job failed at 04:12. Flagging to finance ops.",
+    text: "Checked ledger - payment captured but commission job failed at 04:12. Flagging to finance ops.",
     timestamp: iso(-23 * HOUR),
   },
   {
@@ -50,7 +50,7 @@ const sampleConversation = (userName: string): Message[] => [
     id: "m5",
     author: "agent",
     agentId: "a1",
-    text: "Got it — confirmed on our end. Reprocessing the commission now. You should see it credited within 2 hours.",
+    text: "Got it - confirmed on our end. Reprocessing the commission now. You should see it credited within 2 hours.",
     timestamp: iso(-2 * HOUR),
   },
   {
@@ -139,7 +139,7 @@ const tickets: Ticket[] = seeds.map((s, i) => {
             at: iso(s.updatedOffsetH * HOUR - 4 * HOUR),
             level: s.priority === "Critical" ? "Level 3 Admin" : "Level 2 Senior Support",
             reason:
-              "Issue requires senior intervention — financial impact on user and unable to resolve at L1.",
+              "Issue requires senior intervention - financial impact on user and unable to resolve at L1.",
           },
         ]
       : undefined,

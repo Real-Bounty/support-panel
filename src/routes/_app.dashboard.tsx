@@ -2,18 +2,40 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart";
+import {
+  Area,
+  AreaChart,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  PieChart,
+  Pie,
+  Cell,
+  Bar,
+  ComposedChart,
+  Line,
+  Legend,
+} from "recharts";
 import { useTickets } from "@/lib/mock/hooks";
-import { ticketsStore } from "@/lib/mock/tickets";
 import { currentAgentId } from "@/lib/mock/agents";
-import { StatusBadge } from "@/components/support/StatusBadge";
-import { PriorityBadge } from "@/components/support/PriorityBadge";
-import { SlaIndicator } from "@/components/support/SlaIndicator";
+import {
+  responseTimeTrend,
+  categoryDistribution,
+  openVsResolvedDaily,
+  agentPerformance,
+} from "@/lib/mock/analytics";
 import {
   Inbox,
   UserCircle2,
@@ -24,14 +46,15 @@ import {
   AlertTriangle,
   ArrowRight,
 } from "lucide-react";
-import type { TicketStatus } from "@/lib/mock/types";
+import { StatCard } from "@/shared";
+import { UserAvatar } from "@/components/support/user-avatar";
+
+const PIE_COLORS = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--chart-5)", "var(--muted-foreground)"];
 
 export const Route = createFileRoute("/_app/dashboard")({
-  head: () => ({ meta: [{ title: "Dashboard · NavikX Support" }] }),
+  head: () => ({ meta: [{ title: "Dashboard · Real Bounty Support" }] }),
   component: Dashboard,
 });
-
-const STATUSES: TicketStatus[] = ["Open", "In Progress", "Waiting User", "Escalated", "Resolved", "Closed"];
 
 function Dashboard() {
   const all = useTickets();
@@ -46,18 +69,13 @@ function Dashboard() {
   ).length;
 
   const stats = [
-    { label: "Open Tickets", value: open, delta: "+4 vs yesterday", icon: Inbox, tone: "text-status-open" },
-    { label: "My Assigned", value: mine, delta: `${mine > 0 ? "Active" : "All clear"}`, icon: UserCircle2, tone: "text-primary" },
-    { label: "Escalated", value: escalated, delta: "Needs attention", icon: AlertOctagon, tone: "text-status-escalated" },
-    { label: "Avg Response", value: "1.8h", delta: "↓ 0.3h", icon: Timer, tone: "text-chart-2" },
-    { label: "Avg Resolution", value: "7.4h", delta: "↓ 0.6h", icon: Hourglass, tone: "text-chart-3" },
-    { label: "Resolved Today", value: resolvedToday, delta: "+2 vs yesterday", icon: CheckCircle2, tone: "text-status-resolved" },
-  ];
-
-  const myRecent = all
-    .filter((t) => t.assignedAgentId === currentAgentId)
-    .sort((a, b) => +new Date(b.updatedAt) - +new Date(a.updatedAt))
-    .slice(0, 5);
+    { label: "Open Tickets", value: open, delta: "+4 vs yesterday", icon: Inbox, tone: "info" },
+    { label: "My Assigned", value: mine, delta: mine > 0 ? "Active" : "All clear", icon: UserCircle2, tone: "primary" },
+    { label: "Escalated", value: escalated, delta: "Needs attention", icon: AlertOctagon, tone: "destructive" },
+    { label: "Avg Response", value: "1.8h", delta: "↓ 0.3h", icon: Timer, tone: "accent" },
+    { label: "Avg Resolution", value: "7.4h", delta: "↓ 0.6h", icon: Hourglass, tone: "warning" },
+    { label: "Resolved Today", value: resolvedToday, delta: "+2 vs yesterday", icon: CheckCircle2, tone: "success" },
+  ] as const;
 
   return (
     <div className="space-y-6">
@@ -87,63 +105,136 @@ function Dashboard() {
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {stats.map((s) => (
-          <Card key={s.label} className="p-4">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{s.label}</p>
-                <p className="mt-2 text-2xl font-bold tabular-nums">{s.value}</p>
-              </div>
-              <s.icon className={`h-5 w-5 ${s.tone}`} />
-            </div>
-            <p className="mt-3 text-xs text-muted-foreground">{s.delta}</p>
-          </Card>
+          <StatCard
+            key={s.label}
+            label={s.label}
+            value={s.value}
+            hint={s.delta}
+            tone={s.tone}
+            icon={<s.icon className="size-5" />}
+          />
         ))}
       </div>
 
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Card className="p-4">
+          <h2 className="text-sm font-semibold">Response time trend</h2>
+          <p className="mb-3 text-xs text-muted-foreground">Average first-response time (hours), past 30 days</p>
+          <ChartContainer
+            config={{
+              responseHours: { label: "Response (h)", color: "var(--chart-1)" },
+              resolutionHours: { label: "Resolution (h)", color: "var(--chart-2)" },
+            }}
+            className="h-[260px] w-full"
+          >
+            <AreaChart data={responseTimeTrend}>
+              <defs>
+                <linearGradient id="respFill" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="var(--color-responseHours)" stopOpacity={0.3} />
+                  <stop offset="100%" stopColor="var(--color-responseHours)" stopOpacity={0.02} />
+                </linearGradient>
+                <linearGradient id="resFill" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="var(--color-resolutionHours)" stopOpacity={0.3} />
+                  <stop offset="100%" stopColor="var(--color-resolutionHours)" stopOpacity={0.02} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} className="stroke-border" />
+              <XAxis dataKey="date" fontSize={11} tickLine={false} axisLine={false} tick={{ fill: "var(--color-muted-foreground)" }} />
+              <YAxis fontSize={11} tickLine={false} axisLine={false} tick={{ fill: "var(--color-muted-foreground)" }} />
+              <ChartTooltip content={<ChartTooltipContent />} />
+              <Area type="monotone" dataKey="responseHours" stroke="var(--color-responseHours)" strokeWidth={2.5} fill="url(#respFill)" activeDot={{ r: 4 }} />
+              <Area type="monotone" dataKey="resolutionHours" stroke="var(--color-resolutionHours)" strokeWidth={2.5} fill="url(#resFill)" activeDot={{ r: 4 }} />
+            </AreaChart>
+          </ChartContainer>
+        </Card>
+
+        <Card className="p-4">
+          <h2 className="text-sm font-semibold">Category distribution</h2>
+          <p className="mb-3 text-xs text-muted-foreground">Tickets by category</p>
+          <ChartContainer config={{}} className="h-[260px] w-full">
+            <PieChart>
+              <Pie data={categoryDistribution} dataKey="value" nameKey="name" innerRadius={54} outerRadius={92} paddingAngle={2} stroke="var(--card)" strokeWidth={2}>
+                {categoryDistribution.map((_, i) => (
+                  <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+                ))}
+              </Pie>
+              <ChartTooltip content={<ChartTooltipContent />} />
+              <Legend wrapperStyle={{ fontSize: 12 }} />
+            </PieChart>
+          </ChartContainer>
+        </Card>
+      </div>
+
+      <Card className="p-4">
+        <h2 className="text-sm font-semibold">Open vs Resolved (daily)</h2>
+        <p className="mb-3 text-xs text-muted-foreground">Tickets opened and resolved per day</p>
+        <ChartContainer
+          config={{
+            opened: { label: "Opened", color: "var(--chart-1)" },
+            resolved: { label: "Resolved", color: "var(--chart-4)" },
+          }}
+          className="h-[280px] w-full"
+        >
+          <ComposedChart data={openVsResolvedDaily}>
+            <CartesianGrid strokeDasharray="3 3" vertical={false} className="stroke-border" />
+            <XAxis dataKey="date" fontSize={11} tickLine={false} axisLine={false} tick={{ fill: "var(--color-muted-foreground)" }} />
+            <YAxis fontSize={11} tickLine={false} axisLine={false} tick={{ fill: "var(--color-muted-foreground)" }} />
+            <ChartTooltip content={<ChartTooltipContent />} cursor={{ fill: "var(--color-muted)" }} />
+            <Legend wrapperStyle={{ fontSize: 12 }} />
+            <Bar dataKey="opened" fill="var(--color-opened)" radius={[4, 4, 0, 0]} maxBarSize={28} />
+            <Line type="monotone" dataKey="resolved" stroke="var(--color-resolved)" strokeWidth={2.5} dot={false} activeDot={{ r: 4 }} />
+          </ComposedChart>
+        </ChartContainer>
+      </Card>
+
       <Card className="p-0">
-        <div className="flex items-center justify-between border-b p-4">
-          <div>
-            <h2 className="text-base font-semibold">My recent tickets</h2>
-            <p className="text-xs text-muted-foreground">5 most recently updated tickets assigned to you</p>
-          </div>
-          <Button asChild variant="outline" size="sm">
-            <Link to="/tickets/mine">View all <ArrowRight className="ml-1 h-3.5 w-3.5" /></Link>
-          </Button>
+        <div className="border-b p-4">
+          <h2 className="text-sm font-semibold">Agent performance</h2>
+          <p className="text-xs text-muted-foreground">Per-agent productivity and SLA metrics</p>
         </div>
-        <div className="divide-y">
-          {myRecent.map((t) => (
-            <div key={t.id} className="flex flex-wrap items-center gap-3 p-4 hover:bg-muted/30">
-              <Link
-                to="/tickets/$ticketId"
-                params={{ ticketId: t.id }}
-                className="font-mono text-xs font-semibold text-primary hover:underline"
-              >
-                {t.id}
-              </Link>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium">{t.subject}</p>
-                <p className="truncate text-xs text-muted-foreground">{t.user.name} · {t.user.id}</p>
-              </div>
-              <PriorityBadge priority={t.priority} />
-              <SlaIndicator slaDueAt={t.slaDueAt} createdAt={t.createdAt} />
-              <Select
-                value={t.status}
-                onValueChange={(v) => ticketsStore.update(t.id, { status: v as TicketStatus })}
-              >
-                <SelectTrigger className="w-[150px]"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                </SelectContent>
-              </Select>
-              <StatusBadge status={t.status} />
-            </div>
-          ))}
-          {myRecent.length === 0 && (
-            <div className="p-8 text-center text-sm text-muted-foreground">No tickets assigned to you.</div>
-          )}
-        </div>
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-muted/40">
+              <TableHead>Agent</TableHead>
+              <TableHead className="text-right">Tickets handled</TableHead>
+              <TableHead className="text-right">Avg response (h)</TableHead>
+              <TableHead className="text-right">Avg resolution (h)</TableHead>
+              <TableHead className="text-right">Resolution rate</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {agentPerformance.map((a) => {
+              const pct = Math.round(a.resolutionRate * 100);
+              const rateColor =
+                a.resolutionRate >= 0.9 ? "var(--sla-green)" : a.resolutionRate >= 0.75 ? "var(--sla-amber)" : "var(--sla-red)";
+              return (
+                <TableRow key={a.agentId}>
+                  <TableCell>
+                    <div className="flex items-center gap-3">
+                      <UserAvatar name={a.name} />
+                      <span className="font-medium">{a.name}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-right font-medium tabular-nums">{a.handled}</TableCell>
+                  <TableCell className="text-right tabular-nums">{a.avgResponseH.toFixed(1)}</TableCell>
+                  <TableCell className="text-right tabular-nums">{a.avgResolutionH.toFixed(1)}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center justify-end gap-2.5">
+                      <div className="h-1.5 w-20 overflow-hidden rounded-full bg-muted">
+                        <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: rateColor }} />
+                      </div>
+                      <span className="w-9 text-right text-xs font-semibold tabular-nums" style={{ color: rateColor }}>
+                        {pct}%
+                      </span>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
       </Card>
     </div>
   );

@@ -8,8 +8,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -17,15 +15,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
 import { StatusBadge } from "./StatusBadge";
 import { PriorityBadge } from "./PriorityBadge";
 import { CategoryBadge } from "./CategoryBadge";
 import { SlaIndicator } from "./SlaIndicator";
+import { ListCard } from "./list-card";
+import { UserAvatar } from "./user-avatar";
 import { useTickets } from "@/lib/mock/hooks";
 import { agentById } from "@/lib/mock/agents";
 import type { Ticket, TicketCategory, TicketPriority, TicketStatus } from "@/lib/mock/types";
-import { Search, X } from "lucide-react";
+import { PageHeader, EmptyState, MESSAGES, useDebounce } from "@/shared";
 
 const STATUSES: TicketStatus[] = ["Open", "In Progress", "Waiting User", "Escalated", "Resolved", "Closed"];
 const PRIORITIES: TicketPriority[] = ["Low", "Medium", "High", "Critical"];
@@ -40,6 +39,7 @@ export interface TicketListPageProps {
 export function TicketListPage({ title, description, filter }: TicketListPageProps) {
   const all = useTickets();
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 300);
   const [status, setStatus] = useState<string>("all");
   const [priority, setPriority] = useState<string>("all");
   const [category, setCategory] = useState<string>("all");
@@ -49,8 +49,8 @@ export function TicketListPage({ title, description, filter }: TicketListPagePro
     if (status !== "all") list = list.filter((t) => t.status === status);
     if (priority !== "all") list = list.filter((t) => t.priority === priority);
     if (category !== "all") list = list.filter((t) => t.category === category);
-    if (search.trim()) {
-      const q = search.trim().toLowerCase();
+    if (debouncedSearch.trim()) {
+      const q = debouncedSearch.trim().toLowerCase();
       list = list.filter(
         (t) =>
           t.id.toLowerCase().includes(q) ||
@@ -59,7 +59,7 @@ export function TicketListPage({ title, description, filter }: TicketListPagePro
       );
     }
     return list.sort((a, b) => +new Date(b.updatedAt) - +new Date(a.updatedAt));
-  }, [all, filter, status, priority, category, search]);
+  }, [all, filter, status, priority, category, debouncedSearch]);
 
   const clearFilters = () => {
     setSearch("");
@@ -70,57 +70,45 @@ export function TicketListPage({ title, description, filter }: TicketListPagePro
 
   return (
     <div className="space-y-4">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
-        {description && <p className="mt-1 text-sm text-muted-foreground">{description}</p>}
-      </div>
+      <PageHeader title={title} description={description} />
 
-      <Card className="p-4">
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="relative min-w-[240px] flex-1">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search by Ticket ID, User ID, or name…"
-              className="pl-8"
-            />
-          </div>
-          <Select value={status} onValueChange={setStatus}>
-            <SelectTrigger className="w-[150px]"><SelectValue placeholder="Status" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All statuses</SelectItem>
-              {STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-            </SelectContent>
-          </Select>
-          <Select value={priority} onValueChange={setPriority}>
-            <SelectTrigger className="w-[140px]"><SelectValue placeholder="Priority" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All priorities</SelectItem>
-              {PRIORITIES.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
-            </SelectContent>
-          </Select>
-          <Select value={category} onValueChange={setCategory}>
-            <SelectTrigger className="w-[150px]"><SelectValue placeholder="Category" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All categories</SelectItem>
-              {CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-            </SelectContent>
-          </Select>
-          <Button variant="ghost" size="sm" onClick={clearFilters} className="gap-1">
-            <X className="h-3.5 w-3.5" /> Clear
-          </Button>
-        </div>
-      </Card>
-
-      <Card className="overflow-hidden p-0">
+      <ListCard
+        search={search}
+        onSearch={setSearch}
+        searchPlaceholder="Search by Ticket ID, User ID, or name…"
+        onReset={clearFilters}
+        filters={
+          <>
+            <Select value={status} onValueChange={setStatus}>
+              <SelectTrigger className="w-[150px]"><SelectValue placeholder="Status" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All statuses</SelectItem>
+                {STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={priority} onValueChange={setPriority}>
+              <SelectTrigger className="w-[140px]"><SelectValue placeholder="Priority" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All priorities</SelectItem>
+                {PRIORITIES.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={category} onValueChange={setCategory}>
+              <SelectTrigger className="w-[150px]"><SelectValue placeholder="Category" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All categories</SelectItem>
+                {CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </>
+        }
+      >
         <Table>
           <TableHeader>
-            <TableRow className="bg-muted/40">
-              <TableHead className="w-[110px]">Ticket</TableHead>
+            <TableRow>
               <TableHead>User</TableHead>
               <TableHead>Category</TableHead>
-              <TableHead>Summary</TableHead>
+              <TableHead>Subject</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Priority</TableHead>
               <TableHead>Assigned</TableHead>
@@ -131,32 +119,35 @@ export function TicketListPage({ title, description, filter }: TicketListPagePro
           <TableBody>
             {rows.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={9} className="py-10 text-center text-sm text-muted-foreground">
-                  No tickets match these filters.
+                <TableCell colSpan={8} className="p-0 border-0">
+                  <EmptyState title={MESSAGES.EMPTY.NO_RESULTS} description="Try adjusting your filters." />
                 </TableCell>
               </TableRow>
             ) : (
               rows.map((t) => (
                 <TableRow key={t.id} className="cursor-pointer hover:bg-muted/30">
-                  <TableCell className="font-mono text-xs font-semibold">
-                    <Link to="/tickets/$ticketId" params={{ ticketId: t.id }} className="hover:text-primary">
-                      {t.id}
-                    </Link>
-                  </TableCell>
                   <TableCell>
-                    <div className="flex flex-col">
-                      <span className="text-sm font-medium">{t.user.name}</span>
-                      <span className="text-xs text-muted-foreground font-mono">{t.user.id}</span>
+                    <div className="flex items-center gap-3">
+                      <UserAvatar name={t.user.name} />
+                      <div className="flex min-w-0 flex-col">
+                        <span className="text-sm font-medium">{t.user.name}</span>
+                        <Link
+                          to="/tickets/$ticketId"
+                          params={{ ticketId: t.id }}
+                          className="font-mono text-xs text-muted-foreground hover:text-primary"
+                        >
+                          {t.id}
+                        </Link>
+                      </div>
                     </div>
                   </TableCell>
-                  <TableCell><CategoryBadge category={t.category} /></TableCell>
-                  <TableCell className="max-w-[280px]">
+                  <TableCell><CategoryBadge category={t.category} variant="chip" /></TableCell>
+                  <TableCell className="max-w-[340px]">
                     <span className="line-clamp-1 text-sm">{t.subject}</span>
-                    <span className="line-clamp-1 text-xs text-muted-foreground">{t.summary}</span>
                   </TableCell>
-                  <TableCell><StatusBadge status={t.status} /></TableCell>
-                  <TableCell><PriorityBadge priority={t.priority} /></TableCell>
-                  <TableCell className="text-sm">{agentById(t.assignedAgentId)?.name ?? "—"}</TableCell>
+                  <TableCell><StatusBadge status={t.status} variant="chip" /></TableCell>
+                  <TableCell><PriorityBadge priority={t.priority} variant="chip" /></TableCell>
+                  <TableCell className="text-sm">{agentById(t.assignedAgentId)?.name ?? "-"}</TableCell>
                   <TableCell><SlaIndicator slaDueAt={t.slaDueAt} createdAt={t.createdAt} /></TableCell>
                   <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
                     {timeAgo(t.updatedAt)}
@@ -166,7 +157,7 @@ export function TicketListPage({ title, description, filter }: TicketListPagePro
             )}
           </TableBody>
         </Table>
-      </Card>
+      </ListCard>
 
       <p className="text-xs text-muted-foreground">{rows.length} ticket{rows.length === 1 ? "" : "s"}</p>
     </div>

@@ -1,10 +1,10 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
+import { getStoredUser } from "@/lib/auth";
 
 export const Route = createFileRoute("/")({
   beforeLoad: () => {
     if (typeof window !== "undefined") {
-      const authed = localStorage.getItem("navikx-auth") === "1";
-      throw redirect({ to: authed ? "/dashboard" : "/login" });
+      throw redirect({ to: getStoredUser() ? "/dashboard" : "/login" });
     }
     throw redirect({ to: "/login" });
   },
